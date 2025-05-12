@@ -11,7 +11,7 @@
 
   <ItemGroup>
     <Reference Include="FanControl.Plugins">
-      <HintPath>C:\Program Files (x86)\FanControl\FanControl.Plugins.dll</HintPath>
+      <HintPath>lib\FanControl.Plugins.dll</HintPath>
       <Private>False</Private> <!-- Do not copy FanControl.Plugins.dll to output -->
     </Reference>
   </ItemGroup>

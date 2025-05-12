@@ -1,28 +1,67 @@
-# This workflow will build a .NET project
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
+# This workflow builds the project, packages the plugin DLL, and creates a GitHub release with the DLL attached when a tag is pushed.
 
-name: .NET
+name: .NET Build and Release Plugin
 
 on:
   push:
-    branches: [ "master" ]
-  pull_request:
-    branches: [ "master" ]
+    tags:
+      - 'v*' # Trigger on tags like v1.0, v2.1.3, etc.
 
 jobs:
-  build:
-
-    runs-on: ubuntu-latest
+  build-and-release:
+    runs-on: windows-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 6.0.x
-    - name: Restore dependencies
-      run: dotnet restore
-    - name: Build
-      run: dotnet build --no-restore
-    - name: Test
-      run: dotnet test --no-build --verbosity normal
+        # Specify a .NET SDK version compatible with building your project (even if targeting .NET Framework)
+        # Adjust if needed, 6.0.x is often sufficient for SDK-style projects targeting older frameworks.
+        dotnet-version: '6.0.x' 
+
+    - name: Build plugin
+      run: dotnet build LianLiGAIIPlugin.csproj --configuration Release
+
+    - name: Get Tag Name
+      id: get_tag
+      # Extracts the tag name (e.g., v1.0.0) from the full ref (refs/tags/v1.0.0)
+      run: echo "TAG_NAME=${GITHUB_REF#refs/tags/}" >> $env:GITHUB_OUTPUT
+      shell: bash 
+      
+    - name: Package DLL into Zip
+      id: package
+      run: |
+        $dllPath = "${{ github.workspace }}\bin\Release\FanControl.LianLiGAII.dll"
+        $zipFileName = "FanControl.LianLiGAII-${{ steps.get_tag.outputs.TAG_NAME }}.zip"
+        $zipFilePath = "${{ github.workspace }}\$zipFileName"
+        Compress-Archive -Path $dllPath -DestinationPath $zipFilePath
+        echo "ZIP_FILE=$zipFileName" >> $env:GITHUB_OUTPUT
+        echo "ZIP_PATH=$zipFilePath" >> $env:GITHUB_OUTPUT
+      shell: pwsh
+
+    - name: Create GitHub Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ steps.get_tag.outputs.TAG_NAME }}
+        body: | # Optional: Add release notes here
+          Release of the FanControl Lian Li GA II LCD Plugin version ${{ steps.get_tag.outputs.TAG_NAME }}.
+          Contains FanControl.LianLiGAII.dll
+        draft: false
+        prerelease: false
+
+    - name: Upload Release Asset (Zip)
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }} 
+        asset_path: ${{ steps.package.outputs.ZIP_PATH }}
+        asset_name: ${{ steps.package.outputs.ZIP_FILE }}
+        asset_content_type: application/zip

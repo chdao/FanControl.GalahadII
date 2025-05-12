@@ -1,0 +1,11 @@
+C:\Users\cdaoust\Documents\FanControl-LianLi\obj\Release\LianLiGAIIPlugin.csproj.AssemblyReference.cache
+C:\Users\cdaoust\Documents\FanControl-LianLi\obj\Release\LianLiGAIIPlugin.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\cdaoust\Documents\FanControl-LianLi\obj\Release\LianLiGAIIPlugin.AssemblyInfoInputs.cache
+C:\Users\cdaoust\Documents\FanControl-LianLi\obj\Release\LianLiGAIIPlugin.AssemblyInfo.cs
+C:\Users\cdaoust\Documents\FanControl-LianLi\obj\Release\LianLiGAIIPlugin.csproj.CoreCompileInputs.cache
+C:\Users\cdaoust\Documents\FanControl-LianLi\bin\Release\FanControl.LianLiGAII.dll
+C:\Users\cdaoust\Documents\FanControl-LianLi\bin\Release\FanControl.LianLiGAII.pdb
+C:\Users\cdaoust\Documents\FanControl-LianLi\obj\Release\FanControl.LianLiGAII.dll
+C:\Users\cdaoust\Documents\FanControl-LianLi\obj\Release\FanControl.LianLiGAII.pdb
+C:\Users\cdaoust\Documents\FanControl-LianLi\bin\Release\HidSharp.dll
+C:\Users\cdaoust\Documents\FanControl-LianLi\obj\Release\LianLiGAIIPlugin.csproj.CopyComplete

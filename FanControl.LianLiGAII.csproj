@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <AssemblyName>FanControl.LianLiGAII</AssemblyName>
+    <RootNamespace>FanControl.LianLiGAII</RootNamespace>
+    <Version>1.0.0</Version>
+    <Authors>Your Name</Authors>
+    <Description>FanControl plugin for LianLi GA II AIO coolant temperature monitoring</Description>
+  </PropertyGroup>
+
+  <!-- <ItemGroup>
+    <PackageReference Include="HidSharp" Version="2.1.0" />
+  </ItemGroup> -->
+
+  <ItemGroup>
+    <Reference Include="FanControl.Plugins">
+      <HintPath>C:\Program Files (x86)\FanControl\FanControl.Plugins.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="TestPlugin.cs" />
+    <None Include="TestPlugin.cs" />
+  </ItemGroup>
+</Project> 

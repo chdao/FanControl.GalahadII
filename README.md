@@ -1,4 +1,4 @@
-# FanControl LianLi GA II AIO Plugin
+# FanControl LianLi Galahad II AIO Plugin
 
 This plugin allows FanControl to read the coolant temperature from your LianLi Galahad II AIO cooler.
 

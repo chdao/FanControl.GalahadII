@@ -49,8 +49,6 @@ namespace FanControl.LianLiGAII
         private const int READ_TIMEOUT_MS = 250; 
         private const int UPDATE_INTERVAL_MS = 0; // Remove internal throttle, attempt read on every FanControl update call
 
-        // Active command sending is disabled
-        // private static readonly byte[] GET_TEMP_COMMAND = new byte[] { ... };
 
         private HidDevice _device;
         private HidStream _stream;
@@ -133,16 +131,17 @@ namespace FanControl.LianLiGAII
                     string bufferHex = BitConverter.ToString(_buffer, 0, bytesToLog).Replace("-", " ");
                     float? tempAtIndex11 = (bytesRead > TEMPERATURE_BYTE_INDEX) ? (float?)_buffer[TEMPERATURE_BYTE_INDEX] : null;
                     
+                    // Log the raw buffer details less frequently or only if an issue is suspected
+                    // For now, we can keep it for debugging if values are still unstable.
                     _logger?.Log($"Read {bytesRead} bytes. Temp@Idx11={tempAtIndex11?.ToString() ?? "N/A"}. Buffer[:{bytesToLog}]: {bufferHex}");
                     
                     if (tempAtIndex11.HasValue)
                     {
-                         // Log the successfully read value from byte 11 unconditionally
-                         _logger?.Log($"Value at TEMPERATURE_BYTE_INDEX ({TEMPERATURE_BYTE_INDEX}) is: {tempAtIndex11.Value}");
-
                          // Update FanControl's value only if it actually changed from the last valid reading
                          if (Value == null || tempAtIndex11.Value != Value)
                          {
+                             // Log only when the value changes or it's the first valid reading
+                             _logger?.Log($"New temperature at index {TEMPERATURE_BYTE_INDEX}: {tempAtIndex11.Value} (Previous: {Value?.ToString() ?? "N/A"})");
                              Value = tempAtIndex11.Value;
                          }
                     }

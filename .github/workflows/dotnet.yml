@@ -48,35 +48,26 @@ jobs:
       if: startsWith(github.ref, 'refs/tags/') # Only run on tag pushes
       run: |
         $dllPath = "${{ github.workspace }}\bin\Release\FanControl.LianLiGAII.dll"
-        $zipFileName = "FanControl.LianLiGAII-${{ steps.get_tag.outputs.TAG_NAME }}.zip"
+        # Ensure TAG_NAME is available from the get_tag step
+        $tagNameForFile = if ($env:TAG_NAME) { $env:TAG_NAME } else { $env:GITHUB_REF_NAME }
+        $zipFileName = "FanControl.LianLiGAII-$tagNameForFile.zip"
         $zipFilePath = "${{ github.workspace }}\$zipFileName"
         Compress-Archive -Path $dllPath -DestinationPath $zipFilePath
         echo "ZIP_FILE=$zipFileName" >> $env:GITHUB_OUTPUT
         echo "ZIP_PATH=$zipFilePath" >> $env:GITHUB_OUTPUT
       shell: pwsh
 
-    - name: Create GitHub Release
-      id: create_release
-      uses: actions/create-release@v1
+    - name: Create Release and Upload Asset
+      uses: softprops/action-gh-release@v2
       if: startsWith(github.ref, 'refs/tags/') # Only run on tag pushes
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: ${{ github.ref }}
-        release_name: Release ${{ steps.get_tag.outputs.TAG_NAME }}
-        body: | # Optional: Add release notes here
+        tag_name: ${{ github.ref_name }} # Use github.ref_name for the actual tag
+        name: Release ${{ steps.get_tag.outputs.TAG_NAME }}
+        body: |
           Release of the FanControl Lian Li GA II LCD Plugin version ${{ steps.get_tag.outputs.TAG_NAME }}.
           Contains FanControl.LianLiGAII.dll
+        files: ${{ steps.package.outputs.ZIP_PATH }}
         draft: false
         prerelease: false
-
-    - name: Upload Release Asset (Zip)
-      uses: actions/upload-release-asset@v1
-      if: startsWith(github.ref, 'refs/tags/') # Only run on tag pushes
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }} 
-        asset_path: ${{ steps.package.outputs.ZIP_PATH }}
-        asset_name: ${{ steps.package.outputs.ZIP_FILE }}
-        asset_content_type: application/zip

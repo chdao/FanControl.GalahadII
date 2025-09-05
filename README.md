@@ -53,6 +53,11 @@ If the plugin is not detected:
 
 ## Changelog
 
+### Version 2.0.1
+- ✅ **Continuous PWM Sync**: Plugin now sends PWM enable command every 2 seconds continuously
+- ✅ **Enhanced Reliability**: Ensures persistent PWM synchronization with motherboard
+- ✅ **Fault Tolerance**: Automatically recovers from PWM sync disconnections
+
 ### Version 2.0.0
 - ✅ **Automatic PWM Sync**: Plugin now automatically enables PWM sync on startup
 - ✅ **Intelligent Query System**: Automatically queries device every 2 seconds when temperature data is stale

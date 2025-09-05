@@ -95,6 +95,7 @@ namespace FanControl.LianLiGAII
         private readonly PumpController _pumpController;
         private DateTime _lastTemperatureUpdate = DateTime.MinValue;
         private DateTime _lastQuerySent = DateTime.MinValue;
+        private DateTime _lastPwmSent = DateTime.MinValue;
         private float? _lastTemperatureValue = null;
 
         private Thread _readThread;
@@ -216,17 +217,26 @@ namespace FanControl.LianLiGAII
                         }
                     }
 
-                    // Check if we need to send a query command (but only once every 5 seconds)
                     var now = DateTime.Now;
                     var timeSinceLastUpdate = now - _lastTemperatureUpdate;
                     var timeSinceLastQuery = now - _lastQuerySent;
+                    var timeSinceLastPwm = now - _lastPwmSent;
                     
+                    // Send PWM enable command every 2 seconds
+                    if (timeSinceLastPwm.TotalMilliseconds > QUERY_INTERVAL_MS)
+                    {
+                        _logger?.Log("CoolantSensor: Sending periodic PWM enable command");
+                        _pumpController?.SendCustomCommand("018a00000002013a0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000");
+                        _lastPwmSent = now;
+                    }
+                    
+                    // Check if we need to send a query command (but only once every 2 seconds)
                     bool shouldQuery = (Value == null || timeSinceLastUpdate.TotalMilliseconds > QUERY_INTERVAL_MS) 
                                     && (timeSinceLastQuery.TotalMilliseconds > QUERY_INTERVAL_MS);
                     
                     if (shouldQuery)
                     {
-                        // Temperature hasn't changed in 5 seconds or is unknown, and we haven't sent a query recently
+                        // Temperature hasn't changed in 2 seconds or is unknown, and we haven't sent a query recently
                         _logger?.Log("CoolantSensor: Sending query command - temperature stale or unknown");
                         _pumpController?.SendCustomCommand("018100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000");
                         _lastQuerySent = now;

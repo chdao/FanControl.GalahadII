@@ -53,6 +53,13 @@ If the plugin is not detected:
 
 ## Changelog
 
+### Version 2.1.0
+- 🧹 **Major Code Cleanup**: Removed 75+ lines of unused configuration code
+- ⚡ **Performance Improvements**: Eliminated unnecessary JSON file operations and config system
+- 🎯 **Simplified Architecture**: Streamlined plugin to focus only on PWM sync and temperature monitoring
+- 🚀 **Faster Startup**: No more config file loading/saving operations
+- 🔧 **Reduced Complexity**: Removed unused SetPumpSpeed methods and configuration properties
+
 ### Version 2.0.1
 - ✅ **Continuous PWM Sync**: Plugin now sends PWM enable command every 2 seconds continuously
 - ✅ **Enhanced Reliability**: Ensures persistent PWM synchronization with motherboard

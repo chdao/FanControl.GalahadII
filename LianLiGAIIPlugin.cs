@@ -3,7 +3,6 @@ using HidSharp;
 using System;
 using System.Linq;
 using System.Threading; // Added for Thread and CancellationTokenSource
-using System.IO;
 
 namespace FanControl.LianLiGAII
 {
@@ -26,23 +25,11 @@ namespace FanControl.LianLiGAII
         {
             try 
             {
-                _logger?.Log("LianLi Plugin: Starting initialization...");
                 _pumpController = new PumpController(_logger);
                 _pumpController.Initialize();
                 
                 // Automatically enable PWM sync on startup
-                _logger?.Log("LianLi Plugin: Sending PWM sync enable command...");
-                bool success = _pumpController.SendCustomCommand("018a00000002013a0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000");
-                if (success)
-                {
-                    _logger?.Log("LianLi Plugin: PWM sync enabled successfully on startup");
-                }
-                else
-                {
-                    _logger?.Log("LianLi Plugin: Failed to enable PWM sync on startup");
-                }
-                
-                _logger?.Log("LianLi Plugin: Initialization completed");
+                _pumpController.SendCustomCommand("018a00000002013a0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000");
             }
             catch (Exception ex)
             {
@@ -54,10 +41,8 @@ namespace FanControl.LianLiGAII
         {
             try
             {
-                _logger?.Log("LianLi Plugin: Loading sensors...");
                 _coolantSensor = new CoolantSensor(_logger, _pumpController); // Pass logger and pump controller to sensor
                 container.TempSensors.Add(_coolantSensor);
-                _logger?.Log("LianLi Plugin: Coolant sensor added to container");
             }
             catch (Exception ex)
             {
@@ -96,7 +81,6 @@ namespace FanControl.LianLiGAII
         private DateTime _lastTemperatureUpdate = DateTime.MinValue;
         private DateTime _lastQuerySent = DateTime.MinValue;
         private DateTime _lastPwmSent = DateTime.MinValue;
-        private float? _lastTemperatureValue = null;
 
         private Thread _readThread;
         private CancellationTokenSource _cancellationTokenSource;
@@ -111,9 +95,7 @@ namespace FanControl.LianLiGAII
             _pumpController = pumpController;
             try 
             { 
-                _logger?.Log("CoolantSensor: Starting initialization...");
                 InitializeAndStartListener(); 
-                _logger?.Log("CoolantSensor: Initialization completed");
             }
             catch (Exception ex)
             {
@@ -225,7 +207,6 @@ namespace FanControl.LianLiGAII
                     // Send PWM enable command every 2 seconds
                     if (timeSinceLastPwm.TotalMilliseconds > QUERY_INTERVAL_MS)
                     {
-                        _logger?.Log("CoolantSensor: Sending periodic PWM enable command");
                         _pumpController?.SendCustomCommand("018a00000002013a0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000");
                         _lastPwmSent = now;
                     }
@@ -237,7 +218,6 @@ namespace FanControl.LianLiGAII
                     if (shouldQuery)
                     {
                         // Temperature hasn't changed in 2 seconds or is unknown, and we haven't sent a query recently
-                        _logger?.Log("CoolantSensor: Sending query command - temperature stale or unknown");
                         _pumpController?.SendCustomCommand("018100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000");
                         _lastQuerySent = now;
                     }
@@ -255,7 +235,6 @@ namespace FanControl.LianLiGAII
                             {
                                 Value = tempAtIndex11.Value;
                                 _lastTemperatureUpdate = DateTime.Now;
-                                _lastTemperatureValue = Value;
                             }
                         }
                     }
@@ -339,35 +318,18 @@ namespace FanControl.LianLiGAII
 
         private HidDevice _device;
         private readonly IPluginLogger _logger;
-        private readonly string _configPath;
 
-        // Configuration structure similar to uni-sync
-        public class PumpConfig
-        {
-            public string DeviceId { get; set; }
-            public bool SyncPwm { get; set; } = false;
-            public int PumpSpeed { get; set; } = 50; // 1-100%
-        }
-
-        private PumpConfig _config;
 
         public PumpController(IPluginLogger logger)
         {
             _logger = logger;
-            // Store config in same directory as the plugin
-            var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-            var configDir = Path.Combine(appDataPath, "FanControl-LianLi");
-            Directory.CreateDirectory(configDir);
-            _configPath = Path.Combine(configDir, "pump-config.json");
         }
 
         public void Initialize()
         {
             try
             {
-                LoadConfiguration();
                 FindDevice();
-                ApplyConfiguration();
             }
             catch (Exception ex)
             {
@@ -375,47 +337,6 @@ namespace FanControl.LianLiGAII
             }
         }
 
-        private void LoadConfiguration()
-        {
-            try
-            {
-                if (File.Exists(_configPath))
-                {
-                    var json = File.ReadAllText(_configPath);
-                    _config = System.Text.Json.JsonSerializer.Deserialize<PumpConfig>(json);
-                }
-                else
-                {
-                    // Create default configuration
-                    _config = new PumpConfig
-                    {
-                        DeviceId = $"VID:{VENDOR_ID:X4}/PID:{PRODUCT_ID:X4}",
-                        SyncPwm = false,
-                        PumpSpeed = 50
-                    };
-                    SaveConfiguration();
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger?.Log($"PumpController LoadConfiguration error: {ex.Message}");
-                _config = new PumpConfig(); // Fallback to default
-            }
-        }
-
-        private void SaveConfiguration()
-        {
-            try
-            {
-                var json = System.Text.Json.JsonSerializer.Serialize(_config, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
-                File.WriteAllText(_configPath, json);
-                _logger?.Log($"PumpController configuration saved to: {_configPath}");
-            }
-            catch (Exception ex)
-            {
-                _logger?.Log($"PumpController SaveConfiguration error: {ex.Message}");
-            }
-        }
 
         private bool FindDevice()
         {
@@ -424,12 +345,10 @@ namespace FanControl.LianLiGAII
                 _device = DeviceList.Local.GetHidDeviceOrNull(vendorID: VENDOR_ID, productID: PRODUCT_ID);
                 if (_device != null)
                 {
-                    _logger?.Log($"PumpController: Found Galahad II pump device");
                     return true;
                 }
                 else
                 {
-                    _logger?.Log($"PumpController: Galahad II pump device not found");
                     return false;
                 }
             }
@@ -440,128 +359,6 @@ namespace FanControl.LianLiGAII
             }
         }
 
-        private void ApplyConfiguration()
-        {
-            if (_device == null) return;
-
-            try
-            {
-                using (var stream = _device.Open())
-                {
-                    stream.WriteTimeout = WRITE_TIMEOUT_MS;
-
-                    // Apply PWM sync setting
-                    if (_config.SyncPwm)
-                    {
-                        EnablePwmSync(stream);
-                    }
-                    else
-                    {
-                        DisablePwmSync(stream);
-                    }
-
-                    // Set pump speed if not in PWM sync mode
-                    if (!_config.SyncPwm)
-                    {
-                        SetPumpSpeed(stream, _config.PumpSpeed);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger?.Log($"PumpController ApplyConfiguration error: {ex.Message}");
-            }
-        }
-
-        private void EnablePwmSync(HidStream stream)
-        {
-            try
-            {
-                // Based on reverse engineering similar Lian-Li devices
-                // These commands are educated guesses based on the uni-sync project patterns
-                // You may need to capture actual L-Connect traffic to get exact commands
-                
-                var enablePwmCommand = new byte[REPORT_LENGTH];
-                enablePwmCommand[0] = 0x08; // Report ID (common for Lian-Li devices)
-                enablePwmCommand[1] = 0x01; // Command type - enable PWM sync
-                enablePwmCommand[2] = 0x01; // Enable flag
-                
-                stream.Write(enablePwmCommand);
-                _logger?.Log("PumpController: PWM sync enabled");
-            }
-            catch (Exception ex)
-            {
-                _logger?.Log($"PumpController EnablePwmSync error: {ex.Message}");
-            }
-        }
-
-        private void DisablePwmSync(HidStream stream)
-        {
-            try
-            {
-                var disablePwmCommand = new byte[REPORT_LENGTH];
-                disablePwmCommand[0] = 0x08; // Report ID
-                disablePwmCommand[1] = 0x01; // Command type - PWM sync
-                disablePwmCommand[2] = 0x00; // Disable flag
-                
-                stream.Write(disablePwmCommand);
-                _logger?.Log("PumpController: PWM sync disabled");
-            }
-            catch (Exception ex)
-            {
-                _logger?.Log($"PumpController DisablePwmSync error: {ex.Message}");
-            }
-        }
-
-        private void SetPumpSpeed(HidStream stream, int speedPercent)
-        {
-            try
-            {
-                // Clamp speed to valid range
-                speedPercent = Math.Max(1, Math.Min(100, speedPercent));
-                
-                var setSpeedCommand = new byte[REPORT_LENGTH];
-                setSpeedCommand[0] = 0x08; // Report ID
-                setSpeedCommand[1] = 0x02; // Command type - set speed
-                setSpeedCommand[2] = (byte)speedPercent; // Speed percentage
-                
-                stream.Write(setSpeedCommand);
-                _logger?.Log($"PumpController: Pump speed set to {speedPercent}%");
-            }
-            catch (Exception ex)
-            {
-                _logger?.Log($"PumpController SetPumpSpeed error: {ex.Message}");
-            }
-        }
-
-        // Public methods for external control
-        public void EnablePwmSync()
-        {
-            _config.SyncPwm = true;
-            SaveConfiguration();
-            ApplyConfiguration();
-        }
-
-        public void DisablePwmSync()
-        {
-            _config.SyncPwm = false;
-            SaveConfiguration();
-            ApplyConfiguration();
-        }
-
-        public void SetPumpSpeed(int speedPercent)
-        {
-            _config.PumpSpeed = Math.Max(1, Math.Min(100, speedPercent));
-            SaveConfiguration();
-            if (!_config.SyncPwm) // Only apply if not in PWM sync mode
-            {
-                ApplyConfiguration();
-            }
-        }
-
-        public bool IsPwmSyncEnabled => _config.SyncPwm;
-        public int CurrentPumpSpeed => _config.PumpSpeed;
-        public string ConfigPath => _configPath;
 
         /// <summary>
         /// Sends a custom command to the HID device
@@ -574,7 +371,6 @@ namespace FanControl.LianLiGAII
             {
                 if (_device == null)
                 {
-                    _logger?.Log("SendCustomCommand: Device not available");
                     return false;
                 }
 
@@ -582,7 +378,6 @@ namespace FanControl.LianLiGAII
                 var commandBytes = HexStringToBytes(hexCommand);
                 if (commandBytes == null || commandBytes.Length == 0)
                 {
-                    _logger?.Log("SendCustomCommand: Invalid hex command format");
                     return false;
                 }
 
@@ -592,12 +387,10 @@ namespace FanControl.LianLiGAII
                     if (stream.CanWrite)
                     {
                         stream.Write(commandBytes, 0, commandBytes.Length);
-                        _logger?.Log($"SendCustomCommand: Successfully sent {commandBytes.Length} bytes");
                         return true;
                     }
                     else
                     {
-                        _logger?.Log("SendCustomCommand: Stream not writable");
                         return false;
                     }
                 }

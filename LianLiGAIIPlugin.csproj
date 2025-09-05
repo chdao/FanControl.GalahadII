@@ -9,9 +9,9 @@
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies> <!-- Ensures dependencies are copied -->
     
     <!-- Version Information -->
-    <Version>2.0.1</Version>
-    <AssemblyVersion>2.0.1.0</AssemblyVersion>
-    <FileVersion>2.0.1.0</FileVersion>
+    <Version>2.1.0</Version>
+    <AssemblyVersion>2.1.0.0</AssemblyVersion>
+    <FileVersion>2.1.0.0</FileVersion>
     <AssemblyTitle>Lian-Li Galahad II FanControl Plugin</AssemblyTitle>
     <AssemblyDescription>FanControl plugin for Lian-Li Galahad II AIO coolers with automatic PWM sync and temperature monitoring</AssemblyDescription>
     <AssemblyCompany>Community</AssemblyCompany>

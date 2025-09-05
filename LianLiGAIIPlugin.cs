@@ -29,7 +29,7 @@ namespace FanControl.LianLiGAII
                 _pumpController.Initialize();
                 
                 // Automatically enable PWM sync on startup
-                _pumpController.SendCustomCommand("018a00000002013a0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000");
+                _pumpController.SendCustomCommand("018a00000002013a");
             }
             catch (Exception ex)
             {
@@ -207,7 +207,7 @@ namespace FanControl.LianLiGAII
                     // Send PWM enable command every 2 seconds
                     if (timeSinceLastPwm.TotalMilliseconds > QUERY_INTERVAL_MS)
                     {
-                        _pumpController?.SendCustomCommand("018a00000002013a0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000");
+                        _pumpController?.SendCustomCommand("018a0000000201");
                         _lastPwmSent = now;
                     }
                     
@@ -218,7 +218,7 @@ namespace FanControl.LianLiGAII
                     if (shouldQuery)
                     {
                         // Temperature hasn't changed in 2 seconds or is unknown, and we haven't sent a query recently
-                        _pumpController?.SendCustomCommand("018100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000");
+                        _pumpController?.SendCustomCommand("0181");
                         _lastQuerySent = now;
                     }
 
@@ -362,8 +362,9 @@ namespace FanControl.LianLiGAII
 
         /// <summary>
         /// Sends a custom command to the HID device
+        /// Commands shorter than 64 bytes are automatically padded with zeros
         /// </summary>
-        /// <param name="hexCommand">Command as hex string (e.g., "018a00000002013a...")</param>
+        /// <param name="hexCommand">Command as hex string (e.g., "018a00000002013a" - will be padded to 64 bytes)</param>
         /// <returns>True if command was sent successfully, false otherwise</returns>
         public bool SendCustomCommand(string hexCommand)
         {
@@ -381,12 +382,16 @@ namespace FanControl.LianLiGAII
                     return false;
                 }
 
+                // Ensure command is exactly 64 bytes (pad with zeros if shorter, truncate if longer)
+                var paddedCommand = new byte[REPORT_LENGTH];
+                Array.Copy(commandBytes, 0, paddedCommand, 0, Math.Min(commandBytes.Length, REPORT_LENGTH));
+
                 // Send command using HidSharp
                 using (var stream = _device.Open())
                 {
                     if (stream.CanWrite)
                     {
-                        stream.Write(commandBytes, 0, commandBytes.Length);
+                        stream.Write(paddedCommand, 0, paddedCommand.Length);
                         return true;
                     }
                     else

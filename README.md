@@ -53,6 +53,12 @@ If the plugin is not detected:
 
 ## Changelog
 
+### Version 2.1.1
+- ✨ **Auto-Padding Commands**: SendCustomCommand now automatically pads short commands with zeros
+- 🎯 **Simplified Command Syntax**: Commands can now be ultra-short (e.g., "0181" for query, "018a00000002013a" for PWM enable)
+- 📝 **Cleaner Code**: Removed 100+ characters from command strings, much more readable
+- 🔧 **Protocol Analysis**: Identified command structure - "018" header + operation type ("1" for query, "a" for set)
+
 ### Version 2.1.0
 - 🧹 **Major Code Cleanup**: Removed 75+ lines of unused configuration code
 - ⚡ **Performance Improvements**: Eliminated unnecessary JSON file operations and config system

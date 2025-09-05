@@ -7,6 +7,16 @@
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies> <!-- Ensures dependencies are copied -->
+    
+    <!-- Version Information -->
+    <Version>2.0.0</Version>
+    <AssemblyVersion>2.0.0.0</AssemblyVersion>
+    <FileVersion>2.0.0.0</FileVersion>
+    <AssemblyTitle>Lian-Li Galahad II FanControl Plugin</AssemblyTitle>
+    <AssemblyDescription>FanControl plugin for Lian-Li Galahad II AIO coolers with automatic PWM sync and temperature monitoring</AssemblyDescription>
+    <AssemblyCompany>Community</AssemblyCompany>
+    <AssemblyProduct>FanControl.LianLiGAII</AssemblyProduct>
+    <Copyright>© 2025</Copyright>
   </PropertyGroup>
 
   <ItemGroup>
@@ -18,6 +28,16 @@
 
   <ItemGroup>
     <PackageReference Include="HidSharp" Version="2.1.0" />
+    <PackageReference Include="System.Text.Json" Version="4.7.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="LianLiGAIIPlugin.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="**" />
+    <Compile Include="LianLiGAIIPlugin.cs" />
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">

@@ -1,12 +1,22 @@
 # FanControl LianLi Galahad II AIO Plugin
 
-This plugin allows FanControl to read the coolant temperature from your LianLi Galahad II AIO cooler.
+A comprehensive FanControl plugin for Lian-Li Galahad II AIO coolers with automatic PWM synchronization and intelligent temperature monitoring.
+
+## Features
+
+- **Automatic PWM Sync**: Automatically enables PWM synchronization on plugin startup
+- **Coolant Temperature Monitoring**: Reads and displays coolant temperature in FanControl
+- **Intelligent Query System**: Automatically queries device when temperature data becomes stale (every 2 seconds)
+- **Custom Command Support**: Built-in support for sending custom HID commands to the device
+- **Robust Error Handling**: Comprehensive logging and error recovery mechanisms
+- **Device Auto-Detection**: Automatically finds and connects to Galahad II pumps
 
 ## Requirements
 
 - FanControl (latest version)
-- LianLi GA II AIO cooler
+- Lian-Li Galahad II AIO cooler
 - Windows 10 or later
+- .NET Framework 4.8
 
 ## Installation
 
@@ -17,8 +27,12 @@ This plugin allows FanControl to read the coolant temperature from your LianLi G
 ## Usage
 
 1. Open FanControl
-2. The LianLi GA II AIO plugin should be automatically detected
-3. You can now use the coolant temperature sensor in your fan curves
+2. The "Lian Li GA II LCD Plugin" should be automatically detected and loaded
+3. The plugin will automatically:
+   - Enable PWM sync with your motherboard
+   - Start monitoring coolant temperature
+   - Query the device every 2 seconds if temperature data becomes stale
+4. Use the "GA II Coolant Temp" sensor in your fan curves
 
 ## Troubleshooting
 
@@ -28,12 +42,34 @@ If the plugin is not detected:
 3. Verify that the plugin files are in the correct directory
 4. Try restarting FanControl
 
+## Technical Details
+
+- **Communication**: Uses HidSharp library for USB HID communication
+- **Commands**: Based on reverse-engineered L-Connect protocol via Wireshark analysis
+- **PWM Enable**: `018a00000002013a...` (64-byte command)
+- **PWM Disable**: `018a00000002003a...` (64-byte command) 
+- **Device Query**: `018100000000...` (64-byte command)
+- **Temperature Location**: Byte 11 of device response
+
+## Changelog
+
+### Version 2.0.0
+- ✅ **Automatic PWM Sync**: Plugin now automatically enables PWM sync on startup
+- ✅ **Intelligent Query System**: Automatically queries device every 2 seconds when temperature data is stale
+- ✅ **Custom Command Support**: Added `SendCustomCommand()` method for future extensibility
+- ✅ **Improved Error Handling**: Enhanced logging and error recovery throughout the plugin
+- ✅ **Rate Limiting**: Prevents device hammering with proper query timing controls
+- ✅ **Repository Cleanup**: Removed test files and focused on production-ready code
+
+### Version 1.0.0
+- Initial release with basic coolant temperature monitoring
+
 ## Building from Source
 
 1. Clone this repository
-2. Open the solution in Visual Studio
-3. Restore NuGet packages
-4. Build the solution
+2. Ensure you have .NET Framework 4.8 SDK installed
+3. Run `dotnet build LianLiGAIIPlugin.csproj -c Release`
+4. The compiled plugin will be in `bin/Release/`
 
 ## License
 
